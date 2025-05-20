@@ -6,43 +6,72 @@ import (
 	"time"
 )
 
-func main() {
+type GameRules struct {
+	HiddenNumber int  
+	Try          int  
+	TryLimit     int  
+}
+
+func NewGameSettings(Limit int) *GameRules {
 	rand.Seed(time.Now().UnixNano())
-	number := rand.Intn(10) + 1
+	Number := rand.Intn(10) + 1
+	return &GameRules{
+		HiddenNumber: Number,
+		Try:          0,
+		TryLimit:     Limit,
+	}
+}
 
-	var UserNumber int
-	Try := 0
-	TryLimit := 5
-
-	fmt.Println("Угадайте число от 1 до 10!")
-
-	for Try < TryLimit {
-		fmt.Print("Ваш вариант: ")
-
-		n, err := fmt.Scanf("%d\n", &UserNumber)
-		if err != nil || n != 1 {
-			fmt.Println("Ошибка! Введите целое число от 1 до 10.")
-			var discard string
-			fmt.Scanln(&discard)
-			continue
-		}
-
-		if UserNumber < 1 || UserNumber > 10 {
-			fmt.Println("Ошибка! Число должно быть от 1 до 10!")
-			continue
-		}
-
-		Try++
-
-		if UserNumber == number {
-			fmt.Println("Вы угадали! Это", number)
-			return
-		} else if UserNumber < number {
-			fmt.Println("Загаданное число больше.")
-		} else {
-			fmt.Println("Загаданное число меньше.")
-		}
+func (g *GameRules) UserNumberCheck() (int, bool) {
+	fmt.Print("Ваш вариант: ")
+	var guess int
+	n, err := fmt.Scanf("%d\n", &guess)
+	if err != nil || n != 1 {
+		fmt.Println("Ошибка! Введите целое число от 1 до 10.")
+		var discard string
+		fmt.Scanln(&discard)
+		return 0, false
+	}
+	if guess < 1 || guess > 10 {
+		fmt.Println("Ошибка! Число должно быть от 1 до 10!")
+		return 0, false
 	}
 
-	fmt.Println("Попытки закончились. Загаданное число было:", number)
+	return guess, true
+}
+
+func (g *GameRules) NumberGuess(guess int) bool {
+	if guess == g.HiddenNumber {
+		return true
+	} else if guess < g.HiddenNumber {
+		fmt.Println("Загаданное число больше.")
+	} else {
+		fmt.Println("Загаданное число меньше.")
+	}
+	return false
+}
+
+func (g *GameRules) Play() {
+	fmt.Println("Угадайте число от 1 до 10!")
+
+	for g.Try < g.TryLimit {
+		guess, ok := g.UserNumberCheck()
+		if !ok {
+			continue
+		}
+
+		g.Try++
+		if g.NumberGuess(guess) {
+			fmt.Println("Вы угадали! Это", g.HiddenNumber)
+			return
+		}
+
+	}
+
+	fmt.Println("Попытки закончились. Загаданное число было:", g.HiddenNumber)
+}
+
+func main() {
+	game := NewGameSettings(5) 
+	game.Play()
 }
